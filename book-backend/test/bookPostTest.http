@@ -1,0 +1,9 @@
+POST http://localhost:3000/books/ HTTP/1.1
+content-type: application/json
+
+{
+    "id": 2,
+    "title": "星の王子様",
+    "author": "原田",
+    "overview": "unko"
+}
