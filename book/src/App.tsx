@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 
 interface Book {
@@ -9,14 +9,15 @@ interface Book {
 }
 
 const App = () => {
-  const [books, setBooks] = useState<Book[]>([
-    { id: 1, title: 'Book 1', author: 'Author 1', overview: 'Overview 1' },
-    { id: 2, title: 'Book 2', author: 'Author 2', overview: 'Overview 2' },
-    // 他の本のデータ
-  ]);
+  const [books, setBooks] = useState<Book[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editBook, setEditBook] = useState<Book>({ id: 0, title: '', author: '', overview: '' });
   const [inputBook, setInputBook] = useState<Book>({ id: 0, title: '', author: '', overview: '' });
+
+  useEffect(() => {
+    componentDidMount();
+  }
+    , []);
 
   const openModal = (book: Book) => {
     setEditBook(book);
@@ -44,24 +45,50 @@ const App = () => {
   };
 
   const saveBook = (updatedBook: Book) => {
-    const newBooks = books.map((book) =>
-      book.id === updatedBook.id ? updatedBook : book
-    );
-    setBooks(newBooks);
+    fetch('http://localhost:3000/books', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedBook),
+    }).then(() => {
+      componentDidMount();
+    });
     closeModal();
   };
 
-  const deleteBook = (index: number) => {
-    const newBooks = books.filter((_, i) => i !== index);
-    setBooks(newBooks);
+  const deleteBook = (id: number) => {
+    const deleteBook = books.find((book) => book.id === id);
+    fetch('http://localhost:3000/books', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(deleteBook),
+    }).then(() => {
+      componentDidMount();
+    });
   };
 
   const addBook = () => {
     const newBook = { ...inputBook, id: books.length + 1 };
-    setBooks([...books, newBook]);
+    fetch('http://localhost:3000/books', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(newBook),
+    }).then(() => {
+      componentDidMount();
+    });
     setInputBook({ id: 0, title: '', author: '', overview: '' });
   };
 
+  const componentDidMount = async () => {
+    const response = await fetch('http://localhost:3000/books');
+    const data = await response.json();
+    setBooks(data);
+  }
   return (
     <>
       <div className='book-list-header'>
@@ -106,7 +133,7 @@ const App = () => {
               <td>{book.overview}</td>
               <td>
                 <button onClick={() => openModal(book)}>編集</button>
-                <button onClick={() => deleteBook(index)}>削除</button>
+                <button onClick={() => deleteBook(book.id)}>削除</button>
               </td>
             </tr>
           ))}
